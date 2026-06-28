@@ -3,8 +3,6 @@
 
 #if __has_include(<simd>)
 #include <simd>
-#elif __has_include(<experimental/simd>)
-#include <experimental/simd>
 #else
 #include <algorithm>
 #include <type_traits>
@@ -32,8 +30,6 @@ template<typename Type_>
 constexpr int width() {
 #if __has_include(<simd>)
     return std::simd::basic_vec<Type_>::size();
-#elif __has_include(<experimental/simd>)
-    return std::experimental::simd<Type_>::size();
 #else
 #if defined(__AVX512F__)
     constexpr int w = 512;
