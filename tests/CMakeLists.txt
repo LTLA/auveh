@@ -43,5 +43,13 @@ endmacro()
 add_executable(
     libtest
     src/ivdep.cpp
+    src/width.cpp
 )
 decorate_executable(libtest)
+
+add_executable(
+    stdtest
+    src/width.cpp
+)
+decorate_executable(stdtest)
+set_property(TARGET stdtest PROPERTY CXX_STANDARD 26)

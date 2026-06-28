@@ -2,6 +2,7 @@
 #define AUVEH_AUVEH_HPP
 
 #include "ivdep.hpp"
+#include "width.hpp"
 
 /**
  * @file auveh.hpp
