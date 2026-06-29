@@ -1,5 +1,9 @@
 # Auto-vectorization helpers
 
+![Unit tests](https://github.com/LTLA/auveh/actions/workflows/run-tests.yaml/badge.svg)
+![Documentation](https://github.com/LTLA/auveh/actions/workflows/doxygenate.yaml/badge.svg)
+[![Codecov](https://codecov.io/gh/LTLA/auveh/branch/master/graph/badge.svg?token=OmyPfKEQUm)](https://codecov.io/gh/LTLA/auveh)
+
 ## Overview
 
 This library implements a few macros and functions to help compiler auto-vectorization.
