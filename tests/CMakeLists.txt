@@ -42,7 +42,7 @@ endmacro()
 
 add_executable(
     libtest
-    src/ivdep.cpp
+    src/nodep.cpp
     src/width.cpp
 )
 decorate_executable(libtest)

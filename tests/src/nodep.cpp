@@ -2,7 +2,7 @@
 
 #include <random>
 
-#include "auveh/ivdep.hpp"
+#include "auveh/nodep.hpp"
 
 // These tests won't be meaningful outside of higher optimization levels where auto-vectorization is enabled.
 // But might as well just check that the pragmas are set properly.
@@ -24,7 +24,7 @@ TEST(Ivdep, Basic) {
         expected[i] += y[i] * y[i];
     }
 
-    AUVEH_IVDEP for (std::size_t i = 0, end = x.size(); i < end; ++i) {
+    AUVEH_NODEP for (std::size_t i = 0, end = x.size(); i < end; ++i) {
         x[i] += y[i] * y[i];
     }
 
@@ -54,7 +54,7 @@ TEST(Ivdep, Indexed) {
         expected[i] += x[idx[i]];
     }
 
-    AUVEH_IVDEP for (std::size_t i = 0, end = idx.size(); i < end; ++i) {
+    AUVEH_NODEP for (std::size_t i = 0, end = idx.size(); i < end; ++i) {
         y[i] += x[idx[i]];
     }
 

@@ -26,7 +26,7 @@ void update(
 ```
 
 Normally, the compiler cannot assume that iterations of the above loop are independent, as it does not know that `indices` contains only unique values.
-However, as we know that the `indices` are unique, we can instruct the compiler to ignore these potential dependencies by adding the `AUVEH_IVDEP` macro before the loop.
+However, as we know that the `indices` are unique, we can instruct the compiler to ignore these potential dependencies by adding the `AUVEH_NODEP` macro before the loop.
 This expands to a compiler-specific pragma equivalent to GCC's `#pragma GCC ivdep`, which may be enough to induce the compiler to use scatter/gather instructions.
 For example, testing the code below on Godbolt indicates that clang will use `vgatherdpd` on recent Intel CPUs.
 
@@ -38,14 +38,15 @@ void update2(
     const std::vector<double>& values, // same length as 'indices'
     std::vector<double>& sums
 ) { 
+    // assert(is_unique(indices));
     const int num_indices = indices.size();
-    AUVEH_IVDEP for (int i = 0; i < num_indices; ++i) {
+    AUVEH_NODEP for (int i = 0; i < num_indices; ++i) {
         sums[indices[i]] += values[i];
     }
 }
 ```
 
-The `AUVEH_IVDEP` macro can still be useful for simple loops that are obviously vectorizable.
+The `AUVEH_NODEP` macro can still be useful for simple loops that are obviously vectorizable.
 In the example below, we can guarantee that `left` and `right` are different vectors from `output`.
 Adding the macro allows both clang and GCC to omit aliasing checks for a smaller, more efficient binary.
 
@@ -55,8 +56,10 @@ void dot(
     const std::vector<double>& right,
     std::vector<double>& output // not an alias for 'left' or 'right'.
 ) { 
+    // assert(&left != &output);
+    // assert(&right != &output);
     const std::size_t n = left.size();
-    AUVEH_IVDEP for (std::size_t i = 0; i < n; ++i) {
+    AUVEH_NODEP for (std::size_t i = 0; i < n; ++i) {
         output[i] += left[i] * right[i];
     }
 }
