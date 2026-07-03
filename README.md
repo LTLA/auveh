@@ -6,7 +6,9 @@
 
 ## Overview
 
-This library implements a few macros and functions to help compiler auto-vectorization.
+This library implements a few macros and functions to assist compiler auto-vectorization. 
+Most of our loops are simple enough that auto-vectorization does a pretty good job,
+effectively giving us a free optimization at `-O2` or higher in recent versions of clang and GCC.
 We prefer auto-vectorization over explicit use of intrinsics as the former is more portable,
 does not introduce any third-party dependencies,
 and takes advantage of the compiler's cost model to determine if vectorization is actually beneficial.
@@ -68,3 +70,140 @@ void dot(
     }
 }
 ```
+
+## Specifying the vector width
+
+On occasion, we might need to know the native vector width, e.g., 128 bits for SSE, 256 for AVX, and so on.
+We can get this by calling `vector_width()` with the type of interest:
+
+```cpp
+constexpr int native_width = auveh::vector_width<int>();
+```
+
+For example, when processing data in blocks, we might choose a block size that is a multiple of the vector width.
+This improves the performance of auto-vectorized code by reducing the number of entries into an epilogue loop. 
+
+```cpp
+// Blocked matrix multiplication between a column-major LHS,
+// a row-major RHS and a row-major output matrix.
+void blocked_mult_with_right_row_to_output_row(
+    const std::size_t NR,
+    const std::size_t NC,
+    const std::vector<std::vector<float> >& matrix,
+    const std::size_t NRHS,
+    const std::vector<std::vector<float> >& rhs,
+    std::vector<std::vector<float> >& product,
+    std::size_t outer_block_size
+) {
+    std::size_t c = 0;
+    while (c < NC) { 
+        const std::size_t cend = c + std::min(outer_block_size, NC - c);
+        std::size_t r = 0;
+        while (r < NR) {
+            const std::size_t rend = r + std::min(outer_block_size, NR - r);
+            std::size_t h = 0;
+            while (h < NRHS) {
+                constexpr std::size_t inner_block_size = 8 * auveh::vector_width<float>();
+                const std::size_t hend = h + std::min(inner_block_size, NRHS - h);
+                for (auto ccopy = c; ccopy < cend; ++ccopy) {
+                    const auto& matcol = matrix[ccopy];
+                    const auto& rightrow = rhs[ccopy];
+                    for (auto rcopy = r; rcopy < rend; ++rcopy) {
+                        const auto mult = matcol[rcopy];
+                        auto& outrow = product[rcopy];
+                        for (auto hcopy = h; hcopy < hend; ++hcopy) {
+                            outrow[hcopy] += mult * rightrow[hcopy];
+                        }
+                    }
+                }
+
+                h = hend;
+            }
+            r = rend;
+        }
+        c = cend;
+    }
+}
+```
+
+Another application is to use the native vector width to define the number of accumulators for a summation.
+This strongly encourages the auto-vectorizer to use the appropriate vector instructions,
+albeit at the cost of returning slightly different outputs for machines with different register vector widths.
+
+```cpp
+void sum(const std::size_t num, const double* input) {
+    constexpr std::size_t num_acc = auveh::vector_width<double>();
+    const std::size_t iters = num / num_acc;
+    const std::size_t remainders = num % num_acc;
+    double output = 0;
+
+    if (iters >= 1) {
+        std::array<double, num_acc> sums;
+        std::copy_n(input, num_acc, sums.begin());
+        for (std::size_t i = 1; i < iters; ++i) {
+            // compiler replaces this inner loop with a single vector instruction.
+            for (std::size_t a = 0; a < num_acc; ++a) {
+                sums[a] += input[a + i * num_acc];
+            }
+        }
+        for (std::size_t a = 0; a < num_acc; ++a) {
+            output += sums[a];
+        }
+    }
+
+    for (std::size_t a = 0; a < remainders; ++a) {
+        output += input[a + iters * num_acc]; 
+    }
+    return output;
+}
+```
+
+## Building projects 
+
+### CMake with `FetchContent`
+
+If you're using CMake, you just need to add something like this to your `CMakeLists.txt`:
+
+```cmake
+include(FetchContent)
+
+FetchContent_Declare(
+  auveh
+  GIT_REPOSITORY https://github.com/LTLA/auveh
+  GIT_TAG master # or any version of interest 
+)
+
+FetchContent_MakeAvailable(auveh)
+```
+
+Then you can link to **auveh** to make the headers available during compilation:
+
+```cmake
+# For executables:
+target_link_libraries(myexe auveh)
+
+# For libaries
+target_link_libraries(mylib INTERFACE auveh)
+```
+
+### CMake with `find_package()`
+
+You can install the library by cloning a suitable version of this repository and running the following commands:
+
+```sh
+mkdir build && cd build
+cmake .. -DAUVEH_TESTS=OFF
+cmake --build . --target install
+```
+
+Then you can use `find_package()` as usual:
+
+```cmake
+find_package(ltla_auveh CONFIG REQUIRED)
+target_link_libraries(mylib INTERFACE ltla::auveh)
+```
+
+### Manual
+
+If you're not using CMake, the simple approach is to just copy the files in the `include/` subdirectory - 
+either directly or with Git submodules - and include their path during compilation with, e.g., GCC's `-I`.
