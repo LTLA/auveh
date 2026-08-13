@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.24)
 
-project(auveh
-    VERSION 0.1.0
+project(
+    auveh
+    VERSION 0.1.1
     DESCRIPTION "Auto-vectorization helpers"
     LANGUAGES CXX
 )
