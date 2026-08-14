@@ -119,13 +119,12 @@ Ignoring vector dependencies</h1>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// The major compilers don&#39;t mind if our pragma is inline with the &#39;for&#39;,</span></div>
 <div class="line">    <span class="comment">// but we&#39;ll just use a newline to avoid any potential for confusion. </span></div>
-<div class="line">    <a class="code hl_define" href="nodep_8hpp.html#a34f69c2215857302d2a919539f0c670e">AUVEH_NODEP</a></div>
+<div class="line">    AUVEH_NODEP</div>
 <div class="line">    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; num_indices; ++i) {</div>
 <div class="line">        sums[indices[i]] += values[i];</div>
 <div class="line">    }</div>
 <div class="line">}</div>
 <div class="ttc" id="aauveh_8hpp_html"><div class="ttname"><a href="auveh_8hpp.html">auveh.hpp</a></div><div class="ttdoc">Auto-vectorization helpers.</div></div>
-<div class="ttc" id="anodep_8hpp_html_a34f69c2215857302d2a919539f0c670e"><div class="ttname"><a href="nodep_8hpp.html#a34f69c2215857302d2a919539f0c670e">AUVEH_NODEP</a></div><div class="ttdeci">#define AUVEH_NODEP</div><div class="ttdef"><b>Definition</b> nodep.hpp:60</div></div>
 </div><!-- fragment --><p>The <code>AUVEH_NODEP</code> macro can still be useful for simple loops that are obviously vectorizable. In the example below, we can guarantee that <code>left</code> and <code>right</code> are different vectors from <code>output</code>. Adding the macro allows both clang and GCC to omit aliasing checks for a smaller, more efficient binary.</p>
 <div class="fragment"><div class="line"><span class="keywordtype">void</span> dot(</div>
 <div class="line">    <span class="keyword">const</span> std::vector&lt;double&gt;&amp; left,</div>
@@ -135,7 +134,7 @@ Ignoring vector dependencies</h1>
 <div class="line">    <span class="comment">// assert(&amp;left != &amp;output);</span></div>
 <div class="line">    <span class="comment">// assert(&amp;right != &amp;output);</span></div>
 <div class="line">    <span class="keyword">const</span> std::size_t n = left.size();</div>
-<div class="line">    <a class="code hl_define" href="nodep_8hpp.html#a34f69c2215857302d2a919539f0c670e">AUVEH_NODEP</a> <span class="keywordflow">for</span> (std::size_t i = 0; i &lt; n; ++i) {</div>
+<div class="line">    AUVEH_NODEP <span class="keywordflow">for</span> (std::size_t i = 0; i &lt; n; ++i) {</div>
 <div class="line">        output[i] += left[i] * right[i];</div>
 <div class="line">    }</div>
 <div class="line">}</div>

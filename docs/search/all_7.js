@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['loop_20operations_0',['Loop operations',['../nodep_8hpp.html#loop-operations',1,'']]]
+  ['manual_0',['Manual',['../index.html#autotoc_md7',1,'']]]
 ];
