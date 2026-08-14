@@ -116,7 +116,11 @@ Ignoring vector dependencies</h1>
 <div class="line">) { </div>
 <div class="line">    <span class="comment">// assert(is_unique(indices));</span></div>
 <div class="line">    <span class="keyword">const</span> <span class="keywordtype">int</span> num_indices = indices.size();</div>
-<div class="line">    <a class="code hl_define" href="nodep_8hpp.html#a34f69c2215857302d2a919539f0c670e">AUVEH_NODEP</a> <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; num_indices; ++i) {</div>
+<div class="line"> </div>
+<div class="line">    <span class="comment">// The major compilers don&#39;t mind if our pragma is inline with the &#39;for&#39;,</span></div>
+<div class="line">    <span class="comment">// but we&#39;ll just use a newline to avoid any potential for confusion. </span></div>
+<div class="line">    <a class="code hl_define" href="nodep_8hpp.html#a34f69c2215857302d2a919539f0c670e">AUVEH_NODEP</a></div>
+<div class="line">    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; num_indices; ++i) {</div>
 <div class="line">        sums[indices[i]] += values[i];</div>
 <div class="line">    }</div>
 <div class="line">}</div>
