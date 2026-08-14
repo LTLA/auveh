@@ -12,6 +12,15 @@
     <name>nodep.hpp</name>
     <path>auveh/</path>
     <filename>nodep_8hpp.html</filename>
+    <member kind="define">
+      <type>#define</type>
+      <name>AUVEH_NODEP</name>
+      <anchorfile>nodep_8hpp.html</anchorfile>
+      <anchor>a34f69c2215857302d2a919539f0c670e</anchor>
+      <arglist></arglist>
+      <docanchor file="nodep_8hpp.html" title="Loop operations">loop-operations</docanchor>
+      <docanchor file="nodep_8hpp.html" title="OpenMP SIMD">openmp-simd</docanchor>
+    </member>
   </compound>
   <compound kind="file">
     <name>width.hpp</name>

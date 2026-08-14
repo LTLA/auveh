@@ -99,9 +99,49 @@ $(function(){ initResizable(false); });
 <a href="#details">More...</a></p>
 
 <p><a href="nodep_8hpp_source.html">Go to the source code of this file.</a></p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
+Macros</h2></td></tr>
+<tr class="memitem:a34f69c2215857302d2a919539f0c670e" id="r_a34f69c2215857302d2a919539f0c670e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a34f69c2215857302d2a919539f0c670e">AUVEH_NODEP</a></td></tr>
+<tr class="separator:a34f69c2215857302d2a919539f0c670e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>No vector dependencies in a loop. </p>
-</div></div><!-- contents -->
+</div><h2 class="groupheader">Macro Definition Documentation</h2>
+<a id="a34f69c2215857302d2a919539f0c670e" name="a34f69c2215857302d2a919539f0c670e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a34f69c2215857302d2a919539f0c670e">&#9670;&#160;</a></span>AUVEH_NODEP</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define AUVEH_NODEP</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Assert that the following <code>for</code> loop has no vector dependencies.</p>
+<p>This macro should be placed just above in front of a <code>for</code> statement. It inserts appropriate pragmas to instruct the compiler to ignore dependencies in the loop body. This creates more opportunities for auto-vectorization of the loop if assumed dependencies were present. Even for trivial loops, it allows the compiler to omit aliasing checks for a more compact and efficient binary.</p>
+<p>When <code>NDEBUG</code> is defined, the <code>AUVEH_NODEP</code> macro has a compiler-specific definition:</p>
+<ul>
+<li>clang: <code>#pragma loop vectorize(assume_safety)</code>.</li>
+<li>GCC: <code>#pragma GCC ivdep</code></li>
+<li>ICC: <code>#pragma ivdep</code></li>
+<li>MSVC: <code>#pragma loop(ivdep)</code></li>
+</ul>
+<p>For other compilers, it is left empty.</p>
+<p>The exact nature of the dependencies to be ignored will differ across compilers. ICC's pragma will <a href="https://www.intel.com/content/www/us/en/docs/dpcpp-cpp-compiler/developer-guide-reference/2025-0/ivdep.html">not ignore proven dependencies</a>, while clang's pragma asserts that there are <a href="https://discourse.llvm.org/t/llvm-rfc-addition-support-of-new-vectorization-pragmas-in-llvm/52785/3">no dependencies at all</a>. Thus, for correctness on all platforms, this macro should be used conservatively, i.e., only for loops where there are no dependencies at all.</p>
+<p>When <code>NDEBUG</code> is not defined, the <code>AUVEH_NODEP</code> macro is left empty. This allows the loop body to contain <code>assert()</code> statements in debug builds, which would otherwise preclude autovectorization.</p>
+<h1><a class="anchor" id="loop-operations"></a>
+Loop operations</h1>
+<p>The loop body should only contain array accesses and arithmetic operations. Standard library functions should generally be avoided as many of them have side effects involving global variables. For example, many <code>&lt;cmath&gt;</code> functions will set <code>errno</code>, which precludes vectorization unless the compiler is explicitly instructed to ignore <code>errno</code>. (Indeed, adding <code>AUVEH_NODEP</code> to a loop with a function call like <code>std::sqrt()</code> will cause clang to emit a warning about vectorization failure.)</p>
+<p>The loop body should refrain from examining floating point exceptions. Doing so will probably prohibit autovectorization, but even if it didn't, exceptions will not be set independently for each loop iteration after vectorization. Rather, exceptions should be tested after the loop has completed. The bits are sticky so any exception in any iteration will persist after the loop has finished.</p>
+<h1><a class="anchor" id="openmp-simd"></a>
+OpenMP SIMD</h1>
+<p>OpenMP SIMD also provides a pragma with similar behavior (<code>#pragma omp simd</code>). While this works and is portable, it is often subject to a more heavy-handed interpretation by compilers. Upon seeing <code>#pragma omp simd</code>, <a href="https://developers.redhat.com/articles/2023/12/08/vectorization-optimization-gcc">GCC</a> will forcibly vectorize the loop, even if doing so would decrease performance according to its cost model. <a href="https://devblogs.microsoft.com/cppblog/simd-extension-to-c-openmp-in-visual-studio/">MSVC</a> goes further and enables fast floating-point inside the loop, which is not generally desirable. </p>
+
+</div>
+</div>
+</div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
 Generated by&#160;<a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.12.0
