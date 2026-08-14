@@ -24,7 +24,8 @@ TEST(Ivdep, Basic) {
         expected[i] += y[i] * y[i];
     }
 
-    AUVEH_NODEP for (std::size_t i = 0, end = x.size(); i < end; ++i) {
+    AUVEH_NODEP
+    for (std::size_t i = 0, end = x.size(); i < end; ++i) {
         x[i] += y[i] * y[i];
     }
 
@@ -54,7 +55,8 @@ TEST(Ivdep, Indexed) {
         expected[i] += x[idx[i]];
     }
 
-    AUVEH_NODEP for (std::size_t i = 0, end = idx.size(); i < end; ++i) {
+    AUVEH_NODEP
+    for (std::size_t i = 0, end = idx.size(); i < end; ++i) {
         y[i] += x[idx[i]];
     }
 

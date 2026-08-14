@@ -46,7 +46,11 @@ void update2(
 ) { 
     // assert(is_unique(indices));
     const int num_indices = indices.size();
-    AUVEH_NODEP for (int i = 0; i < num_indices; ++i) {
+
+    // The major compilers don't mind if our pragma is inline with the 'for',
+    // but we'll just use a newline to avoid any potential for confusion. 
+    AUVEH_NODEP
+    for (int i = 0; i < num_indices; ++i) {
         sums[indices[i]] += values[i];
     }
 }
