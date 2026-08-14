@@ -6,6 +6,7 @@
  * @brief No vector dependencies in a loop.
  */
 
+#ifdef NDEBUG
 #if defined(__clang__)
 #define AUVEH_NODEP _Pragma("clang loop vectorize(assume_safety)")
 #elif defined(__GNUC__)
@@ -15,6 +16,9 @@
 #elif defined(_MSC_VER)
 #define AUVEH_NODEP _Pragma("loop(ivdep)")
 #else
+#define AUVEH_NODEP
+#endif
+#else
 /**
  * Assert that the following `for` loop has no vector dependencies.
  *
@@ -23,7 +27,7 @@
  * This creates more opportunities for auto-vectorization of the loop if assumed dependencies were present.
  * Even for trivial loops, it allows the compiler to omit aliasing checks for a more compact and efficient binary.
  *
- * The definition of this macro is compiler-specific:
+ * When `NDEBUG` is defined, the `AUVEH_NODEP` macro has a compiler-specific definition:
  *
  * - clang: `#pragma loop vectorize(assume_safety)`.
  * - GCC: `#pragma GCC ivdep`
@@ -36,6 +40,9 @@
  * ICC's pragma will [not ignore proven dependencies](https://www.intel.com/content/www/us/en/docs/dpcpp-cpp-compiler/developer-guide-reference/2025-0/ivdep.html),
  * while clang's pragma asserts that there are [no dependencies at all](https://discourse.llvm.org/t/llvm-rfc-addition-support-of-new-vectorization-pragmas-in-llvm/52785/3).
  * Thus, for correctness on all platforms, this macro should be used conservatively, i.e., only for loops where there are no dependencies at all.
+ *
+ * When `NDEBUG` is not defined, the `AUVEH_NODEP` macro is left empty.
+ * This allows the loop body to contain `assert()` statements in debug builds, which would otherwise preclude autovectorization.
  *
  * @section loop-operations Loop operations
  *
