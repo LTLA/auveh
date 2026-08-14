@@ -31,12 +31,27 @@
  * - MSVC: `#pragma loop(ivdep)`
  * 
  * For other compilers, it is left empty.
- * Note that the exact nature of the dependencies to be ignored will differ across compilers. 
+ *
+ * The exact nature of the dependencies to be ignored will differ across compilers. 
  * ICC's pragma will [not ignore proven dependencies](https://www.intel.com/content/www/us/en/docs/dpcpp-cpp-compiler/developer-guide-reference/2025-0/ivdep.html),
  * while clang's pragma asserts that there are [no dependencies at all](https://discourse.llvm.org/t/llvm-rfc-addition-support-of-new-vectorization-pragmas-in-llvm/52785/3).
  * Thus, for correctness on all platforms, this macro should be used conservatively, i.e., only for loops where there are no dependencies at all.
- * 
- * We note that OpenMP SIMD also provides a pragma with similar behavior (`#pragma omp simd`). 
+ *
+ * @section loop-operations Loop operations
+ *
+ * The loop body should only contain array accesses and arithmetic operations.
+ * Standard library functions should generally be avoided as many of them have side effects involving global variables.
+ * For example, many `<cmath>` functions will set `errno`, which precludes vectorization unless the compiler is explicitly instructed to ignore `errno`.
+ * (Indeed, adding `AUVEH_NODEP` to a loop with a function call like `std::sqrt()` will cause clang to emit a warning about vectorization failure.)
+ *
+ * The loop body should refrain from examining floating point exceptions.
+ * Doing so will probably prohibit autovectorization, but even if it didn't, exceptions will not be set independently for each loop iteration after vectorization.
+ * Rather, exceptions should be tested after the loop has completed. 
+ * The bits are sticky so any exception in any iteration will persist after the loop has finished. 
+ *
+ * @section openmp-simd OpenMP SIMD
+ *
+ * OpenMP SIMD also provides a pragma with similar behavior (`#pragma omp simd`). 
  * While this works and is portable, it is often subject to a more heavy-handed interpretation by compilers.
  * Upon seeing `#pragma omp simd`, [GCC](https://developers.redhat.com/articles/2023/12/08/vectorization-optimization-gcc) will forcibly vectorize the loop,
  * even if doing so would decrease performance according to its cost model.
