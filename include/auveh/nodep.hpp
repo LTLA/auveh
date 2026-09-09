@@ -7,6 +7,7 @@
  */
 
 #ifdef NDEBUG
+#ifndef AUVEH_NODEP
 #if defined(__clang__)
 #define AUVEH_NODEP _Pragma("clang loop vectorize(assume_safety)")
 #elif defined(__GNUC__)
@@ -18,14 +19,14 @@
 #else
 #define AUVEH_NODEP
 #endif
+#endif
 #else
 /**
  * Assert that the following `for` loop has no vector dependencies.
  *
- * This macro should be placed just above in front of a `for` statement.
- * It inserts appropriate pragmas to instruct the compiler to ignore dependencies in the loop body.
- * This creates more opportunities for auto-vectorization of the loop if assumed dependencies were present.
- * Even for trivial loops, it allows the compiler to omit aliasing checks for a more compact and efficient binary.
+ * This macro should be placed just above a `for` statement.
+ * It inserts appropriate pragmas to assert that the loop body has no dependencies between iterations, which creates more opportunities for auto-vectorization of the loop.
+ * Even for trivial loops, it allows the compiler to omit aliasing checks for a more compact binary.
  *
  * When `NDEBUG` is defined, the `AUVEH_NODEP` macro has a compiler-specific definition:
  *
@@ -36,25 +37,30 @@
  * 
  * For other compilers, it is left empty.
  *
+ * When `NDEBUG` is not defined, the `AUVEH_NODEP` macro is left empty.
+ * This allows the loop body to contain `assert()` statements in debug builds, which would otherwise prevent autovectorization.
+ *
+ * If `AUVEH_NODEP` is already defined before including `nodep.hpp`, the existing definition will be preserved.
+ * This is occasionally useful to disable all vectorization instructions, e.g., for trapping math (see below).
+ *
+ * @section dependencies Vector dependencies
+ *
  * The exact nature of the dependencies to be ignored will differ across compilers. 
  * ICC's pragma will [not ignore proven dependencies](https://www.intel.com/content/www/us/en/docs/dpcpp-cpp-compiler/developer-guide-reference/2025-0/ivdep.html),
- * while clang's pragma asserts that there are [no dependencies at all](https://discourse.llvm.org/t/llvm-rfc-addition-support-of-new-vectorization-pragmas-in-llvm/52785/3).
- * Thus, for correctness on all platforms, this macro should be used conservatively, i.e., only for loops where there are no dependencies at all.
+ * while the pragmas for [clang](https://discourse.llvm.org/t/llvm-rfc-addition-support-of-new-vectorization-pragmas-in-llvm/52785/3)
+ * and [GCC](https://gcc.gnu.org/onlinedocs/gcc/Loop-Specific-Pragmas.html) assert that there are no dependencies at all.
  *
- * When `NDEBUG` is not defined, the `AUVEH_NODEP` macro is left empty.
- * This allows the loop body to contain `assert()` statements in debug builds, which would otherwise preclude autovectorization.
+ * For correctness on all platforms, the `AUVEH_NODEP` macro should be used conservatively, i.e., only for loops where the developer knows that there are no dependencies. 
+ * A loop is suitable for `AUVEH_NODEP` if we are able to execute its body for different iterations:
+ * 
+ * - In parallel without race conditions.
+ * - In any order without affecting the result.
  *
- * @section loop-operations Loop operations
- *
- * The loop body should only contain array accesses and arithmetic operations.
- * Standard library functions should generally be avoided as many of them have side effects involving global variables.
- * For example, many `<cmath>` functions will set `errno`, which precludes vectorization unless the compiler is explicitly instructed to ignore `errno`.
- * (Indeed, adding `AUVEH_NODEP` to a loop with a function call like `std::sqrt()` will cause clang to emit a warning about vectorization failure.)
- *
- * The loop body should refrain from examining floating point exceptions.
- * Doing so will probably prohibit autovectorization, but even if it didn't, exceptions will not be set independently for each loop iteration after vectorization.
- * Rather, exceptions should be tested after the loop has completed. 
- * The bits are sticky so any exception in any iteration will persist after the loop has finished. 
+ * The latter implies that there are no changes in control flow within the body that might cause the loop to prematurely exit.
+ * This is usually obvious, e.g., no `break`, `return` or `throw` within the body,
+ * but it also asserts that signals will not be raised from floating-point exception traps, out-of-bounds casts to signed integers, etc.
+ * We believe that this assertion is reasonable in the vast majority of applications using the default compiler settings.
+ * Nonetheless, if strictly conforming behavior is required, developers can manually define `AUVEH_NODEP` to a no-op. 
  *
  * @section openmp-simd OpenMP SIMD
  *
