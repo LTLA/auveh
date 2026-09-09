@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['ignoring_20vector_20dependencies_0',['Ignoring vector dependencies',['../index.html#autotoc_md2',1,'']]]
+  ['manual_0',['Manual',['../index.html#autotoc_md7',1,'']]]
 ];
