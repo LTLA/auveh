@@ -19,6 +19,7 @@
       <anchor>a34f69c2215857302d2a919539f0c670e</anchor>
       <arglist></arglist>
       <docanchor file="nodep_8hpp.html" title="Loop operations">loop-operations</docanchor>
+      <docanchor file="nodep_8hpp.html" title="Floating-point exceptions">fpe</docanchor>
       <docanchor file="nodep_8hpp.html" title="OpenMP SIMD">openmp-simd</docanchor>
     </member>
   </compound>

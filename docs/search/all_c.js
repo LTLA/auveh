@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['simd_0',['OpenMP SIMD',['../nodep_8hpp.html#openmp-simd',1,'']]],
-  ['specifying_20the_20vector_20width_1',['Specifying the vector width',['../index.html#autotoc_md3',1,'']]]
+  ['point_20exceptions_0',['Floating-point exceptions',['../nodep_8hpp.html#fpe',1,'']]],
+  ['projects_1',['Building projects',['../index.html#autotoc_md4',1,'']]]
 ];
