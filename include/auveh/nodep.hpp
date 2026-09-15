@@ -53,12 +53,19 @@
  * For correctness on all platforms, the `AUVEH_NODEP` macro should be used conservatively, i.e., only for loops where the developer knows that there are no dependencies. 
  * A loop is suitable for `AUVEH_NODEP` if we are able to execute its body for different iterations:
  * 
- * - In parallel without race conditions.
- * - In any order without affecting the result.
+ * 1. In parallel without race conditions.
+ * 2. In any order without affecting the result.
  *
- * The latter implies that there are no changes in control flow within the body that might cause the loop to prematurely exit.
- * This is usually obvious, e.g., no `break`, `return` or `throw` within the body,
- * but it also asserts that signals will not be raised from floating-point exception traps, out-of-bounds casts to signed integers, etc.
+ * This usually translates to the following restrictions on the contents of the loop body:
+ *
+ * - No changes in control flow that might cause the loop to prematurely exit.
+ *   This is usually obvious, e.g., no `break` or `return` within the body.
+ * - No thrown exceptions, which would be equivalent to a `break`.
+ *   This also rules out memory allocation.
+ * - No modification to global variables like `errno`.
+ *   This rules out most `<cmath>` functions if `math_errhandling | MATH_ERRNO` is set.
+ *
+ * `AUVEH_NODEP` also asserts that signals will not be raised from floating-point exception traps, out-of-bounds casts to signed integers, etc.
  * We believe that this assertion is reasonable in the vast majority of applications using the default compiler settings.
  * Nonetheless, if strictly conforming behavior is required, developers can manually define `AUVEH_NODEP` to a no-op. 
  *
