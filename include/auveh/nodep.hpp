@@ -47,27 +47,24 @@
  *
  * The exact nature of the dependencies to be ignored will differ across compilers. 
  * ICC's pragma will [not ignore proven dependencies](https://www.intel.com/content/www/us/en/docs/dpcpp-cpp-compiler/developer-guide-reference/2025-0/ivdep.html),
- * while the pragmas for [clang](https://discourse.llvm.org/t/llvm-rfc-addition-support-of-new-vectorization-pragmas-in-llvm/52785/3)
- * and [GCC](https://gcc.gnu.org/onlinedocs/gcc/Loop-Specific-Pragmas.html) assert that there are no dependencies at all.
+ * while clang's pragma asserts that there are [no dependencies at all](https://discourse.llvm.org/t/llvm-rfc-addition-support-of-new-vectorization-pragmas-in-llvm/52785/3).
+ * This results in some interesting differences between compilers when `AUVEH_NODEP` is added to a loop with dependencies,
+ * e.g., clang will incorrectly vectorize it while GCC will just generate scalar code.
  *
- * For correctness on all platforms, the `AUVEH_NODEP` macro should be used conservatively, i.e., only for loops where the developer knows that there are no dependencies. 
- * A loop is suitable for `AUVEH_NODEP` if we are able to execute its body for different iterations:
- * 
- * 1. In parallel without race conditions.
- * 2. In any order without affecting the result.
+ * For portability, the `AUVEH_NODEP` macro should be treated as the developer's assertion that there are no dependencies of any kind (proven or assumed).
+ * This is the most conservative interpretation that satisfies all compilers' conditions for their corresponding pragmas.
+ * Under this policy, a loop is only suitable for `AUVEH_NODEP` if:
  *
- * This usually translates to the following restrictions on the contents of the loop body:
+ * - Each loop iteration writes to memory addresses that are not read/written by any other iteration.
+ *   Note that this precludes functions that set global variables like `errno`, e.g., from `<cmath>`.
+ * - The total number of loop iterations is not changed by any iteration.
+ *   This is a "dependency" between iterations in the sense that one iteration could cause later iterations to not run at all.
+ *   Thus, there cannot be any changes in control flow inside the loop body, i.e., no `break`, `return` or `throw`.
  *
- * - No changes in control flow that might cause the loop to prematurely exit.
- *   This is usually obvious, e.g., no `break` or `return` within the body.
- * - No thrown exceptions, which would be equivalent to a `break`.
- *   This also rules out memory allocation.
- * - No modification to global variables like `errno`.
- *   This rules out most `<cmath>` functions if `math_errhandling | MATH_ERRNO` is set.
- *
- * `AUVEH_NODEP` also asserts that signals will not be raised from floating-point exception traps, out-of-bounds casts to signed integers, etc.
- * We believe that this assertion is reasonable in the vast majority of applications using the default compiler settings.
- * Nonetheless, if strictly conforming behavior is required, developers can manually define `AUVEH_NODEP` to a no-op. 
+ * The second condition precludes many functions that might throw, including those that might allocate memory.
+ * It also assumes that signals will not be raised from floating-point exception traps or out-of-bounds casts to signed integers.
+ * We believe that this assumption is reasonable in the vast majority of applications where trapping is not performed.
+ * Nonetheless, if strict conformance to the standard is required, developers can manually define `AUVEH_NODEP` to a no-op.
  *
  * @section openmp-simd OpenMP SIMD
  *
